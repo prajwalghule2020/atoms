@@ -1,0 +1,265 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+}
+
+// ─── Users & Org ─────────────────────────────────────────────────────────────
+
+model User {
+  id           String  @id @default(cuid())
+  email        String  @unique
+  name         String
+  role         Role    @default(EMPLOYEE)
+  managerId    String?
+  departmentId String?
+  azureAdId    String? @unique
+
+  manager    User?       @relation("ManagerReports", fields: [managerId], references: [id])
+  reports    User[]      @relation("ManagerReports")
+  department Department? @relation(fields: [departmentId], references: [id])
+
+  goalSheets       GoalSheet[]
+  checkinSessions  CheckinSession[]  @relation("ManagerCheckins")
+  notifications    Notification[]
+  auditLogs        AuditLog[]        @relation("AuditActor")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+enum Role {
+  EMPLOYEE
+  MANAGER
+  ADMIN
+}
+
+model Department {
+  id       String  @id @default(cuid())
+  name     String
+  parentId String?
+
+  parent   Department?  @relation("DeptHierarchy", fields: [parentId], references: [id])
+  children Department[] @relation("DeptHierarchy")
+  users    User[]
+
+  createdAt DateTime @default(now())
+
+  @@map("departments")
+}
+
+// ─── Cycles & Thrust Areas ───────────────────────────────────────────────────
+
+model Cycle {
+  id              String    @id @default(cuid())
+  year            Int
+  name            String
+  goalSettingOpen DateTime?
+  q1Open          DateTime?
+  q2Open          DateTime?
+  q3Open          DateTime?
+  q4Open          DateTime?
+  isActive        Boolean   @default(false)
+
+  thrustAreas      ThrustArea[]
+  goalSheets       GoalSheet[]
+  escalationRules  EscalationRule[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("cycles")
+}
+
+model ThrustArea {
+  id      String @id @default(cuid())
+  name    String
+  cycleId String
+
+  cycle Cycle  @relation(fields: [cycleId], references: [id])
+  goals Goal[]
+
+  createdAt DateTime @default(now())
+
+  @@map("thrust_areas")
+}
+
+// ─── Goal Sheets & Goals ─────────────────────────────────────────────────────
+
+model GoalSheet {
+  id       String          @id @default(cuid())
+  userId   String
+  cycleId  String
+  status   GoalSheetStatus @default(DRAFT)
+  lockedAt DateTime?
+  reworkComment String?
+
+  user   User  @relation(fields: [userId], references: [id])
+  cycle  Cycle @relation(fields: [cycleId], references: [id])
+  goals  Goal[]
+  checkinSessions CheckinSession[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, cycleId])
+  @@map("goal_sheets")
+}
+
+enum GoalSheetStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  REWORK
+}
+
+model Goal {
+  id             String  @id @default(cuid())
+  sheetId        String
+  title          String
+  description    String?
+  thrustAreaId   String
+  uomType        UomType
+  targetValue    Float?
+  targetDate     DateTime?
+  weightage      Float   // 10–100, total across sheet must = 100
+  sortOrder      Int     @default(0)
+  isShared       Boolean @default(false)
+  sharedFromGoalId String?
+
+  sheet          GoalSheet       @relation(fields: [sheetId], references: [id], onDelete: Cascade)
+  thrustArea     ThrustArea      @relation(fields: [thrustAreaId], references: [id])
+  sharedFromGoal Goal?           @relation("SharedGoalSource", fields: [sharedFromGoalId], references: [id])
+  sharedCopies   Goal[]          @relation("SharedGoalSource")
+  quarterlyUpdates QuarterlyUpdate[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("goals")
+}
+
+enum UomType {
+  NUMERIC_MIN // higher is better (e.g. revenue)
+  NUMERIC_MAX // lower is better (e.g. TAT, cost)
+  TIMELINE    // date-based completion
+  ZERO        // zero = success (e.g. safety incidents)
+}
+
+// ─── Quarterly Updates & Check-ins ───────────────────────────────────────────
+
+model QuarterlyUpdate {
+  id            String        @id @default(cuid())
+  goalId        String
+  quarter       Quarter
+  actualValue   Float?
+  actualDate    DateTime?
+  status        UpdateStatus  @default(NOT_STARTED)
+  computedScore Float?        // 0–1 range, stored for tracking
+
+  goal Goal @relation(fields: [goalId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([goalId, quarter])
+  @@map("quarterly_updates")
+}
+
+enum Quarter {
+  Q1
+  Q2
+  Q3
+  Q4
+}
+
+enum UpdateStatus {
+  NOT_STARTED
+  ON_TRACK
+  COMPLETED
+}
+
+model CheckinSession {
+  id          String    @id @default(cuid())
+  sheetId     String
+  quarter     Quarter
+  managerId   String
+  comment     String
+  completedAt DateTime  @default(now())
+
+  sheet   GoalSheet @relation(fields: [sheetId], references: [id])
+  manager User      @relation("ManagerCheckins", fields: [managerId], references: [id])
+
+  @@unique([sheetId, quarter])
+  @@map("checkin_sessions")
+}
+
+// ─── Governance ──────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id          String @id @default(cuid())
+  entity      String // e.g. "Goal", "GoalSheet"
+  entityId    String
+  changedById String
+  action      String // e.g. "UPDATE", "UNLOCK"
+  oldData     Json?
+  newData     Json?
+
+  changedBy User @relation("AuditActor", fields: [changedById], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@map("audit_logs")
+}
+
+model EscalationRule {
+  id            String          @id @default(cuid())
+  cycleId       String
+  triggerType   EscalationTrigger
+  daysThreshold Int
+  active        Boolean         @default(true)
+
+  cycle Cycle @relation(fields: [cycleId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@map("escalation_rules")
+}
+
+enum EscalationTrigger {
+  GOAL_NOT_SUBMITTED     // employee hasn't submitted within N days of cycle open
+  GOAL_NOT_APPROVED      // manager hasn't approved within N days of submission
+  CHECKIN_NOT_COMPLETED  // check-in not done within active quarter window
+}
+
+model Notification {
+  id      String           @id @default(cuid())
+  userId  String
+  type    NotificationType
+  title   String
+  message String
+  link    String?
+  isRead  Boolean          @default(false)
+
+  user User @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@map("notifications")
+}
+
+enum NotificationType {
+  GOAL_SUBMITTED
+  GOAL_APPROVED
+  GOAL_RETURNED
+  CHECKIN_REMINDER
+  ESCALATION
+  SHARED_GOAL_RECEIVED
+  SYSTEM
+}
+
