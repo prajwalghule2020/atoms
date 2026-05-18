@@ -1,6 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  transpilePackages: ["@repo/validators"],
   async redirects() {
     return [
       { source: "/goals", destination: "/dashboard/goals", permanent: true },
