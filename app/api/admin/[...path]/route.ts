@@ -86,8 +86,8 @@ export async function GET(request: Request) {
     });
 
     const total = sheets.length;
-    const submitted = sheets.filter((sheet) => sheet.status !== "DRAFT").length;
-    const approved = sheets.filter((sheet) => sheet.status === "APPROVED").length;
+    const submitted = sheets.filter((sheet: any) => sheet.status !== "DRAFT").length;
+    const approved = sheets.filter((sheet: any) => sheet.status === "APPROVED").length;
 
     const deptMap: Record<string, { name: string; count: number; approved: number; totalScore: number; scoredGoals: number }> = {};
     for (const sheet of sheets) {

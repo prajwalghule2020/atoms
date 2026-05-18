@@ -6,7 +6,11 @@
     "esModuleInterop": true,
     "incremental": false,
     "isolatedModules": true,
-    "lib": ["es2022", "DOM", "DOM.Iterable"],
+    "lib": [
+      "es2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
     "module": "ESNext",
     "moduleDetection": "force",
     "moduleResolution": "Bundler",
@@ -16,7 +20,7 @@
     "strict": true,
     "target": "ES2022",
     "allowJs": true,
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "noEmit": true,
     "strictNullChecks": true,
     "plugins": [
@@ -25,9 +29,15 @@
       }
     ],
     "paths": {
-      "@/*": ["./*"],
-      "@repo/db": ["./db/src/index.ts"],
-      "@repo/validators": ["./validators/src/index.ts"]
+      "@/*": [
+        "./*"
+      ],
+      "@repo/db": [
+        "./db/src/index.ts"
+      ],
+      "@repo/validators": [
+        "./validators/src/index.ts"
+      ]
     }
   },
   "include": [
@@ -35,7 +45,10 @@
     "**/*.tsx",
     "next-env.d.ts",
     "next.config.js",
-    ".next/types/**/*.ts"
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules"
+  ]
 }
