@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import ExcelJS from "exceljs";
 
 import { prisma } from "@repo/db";
-import type { Prisma } from "@repo/db";
 import {
   CreateCycleSchema,
   UpdateCycleSchema,
@@ -135,9 +134,7 @@ export async function GET(request: Request) {
       goalSheets: { where: { cycleId: cycle.id }, select: { status: true, updatedAt: true } },
     } as const;
 
-    type UserWithDraft = Prisma.UserGetPayload<{ select: typeof usersWithDraftSelect }>;
-
-    const usersWithDraft: UserWithDraft[] = await prisma.user.findMany({
+    const usersWithDraft = await prisma.user.findMany({
       where: {
         role: "EMPLOYEE",
         OR: [

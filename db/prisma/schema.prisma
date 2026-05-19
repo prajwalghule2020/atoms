@@ -3,11 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
-
-// ─── Users & Org ─────────────────────────────────────────────────────────────
 
 model User {
   id           String  @id @default(cuid())
@@ -18,14 +16,14 @@ model User {
   departmentId String?
   azureAdId    String? @unique
 
-  manager    User?       @relation("ManagerReports", fields: [managerId], references: [id])
-  reports    User[]      @relation("ManagerReports")
+  manager   User?       @relation("ManagerReports", fields: [managerId], references: [id])
+  reports   User[]      @relation("ManagerReports")
   department Department? @relation(fields: [departmentId], references: [id])
 
-  goalSheets       GoalSheet[]
-  checkinSessions  CheckinSession[]  @relation("ManagerCheckins")
-  notifications    Notification[]
-  auditLogs        AuditLog[]        @relation("AuditActor")
+  goalSheets      GoalSheet[]
+  checkinSessions CheckinSession[] @relation("ManagerCheckins")
+  notifications   Notification[]
+  auditLogs       AuditLog[]       @relation("AuditActor")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -53,8 +51,6 @@ model Department {
   @@map("departments")
 }
 
-// ─── Cycles & Thrust Areas ───────────────────────────────────────────────────
-
 model Cycle {
   id              String    @id @default(cuid())
   year            Int
@@ -66,9 +62,9 @@ model Cycle {
   q4Open          DateTime?
   isActive        Boolean   @default(false)
 
-  thrustAreas      ThrustArea[]
-  goalSheets       GoalSheet[]
-  escalationRules  EscalationRule[]
+  thrustAreas     ThrustArea[]
+  goalSheets      GoalSheet[]
+  escalationRules EscalationRule[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -89,19 +85,17 @@ model ThrustArea {
   @@map("thrust_areas")
 }
 
-// ─── Goal Sheets & Goals ─────────────────────────────────────────────────────
-
 model GoalSheet {
-  id       String          @id @default(cuid())
-  userId   String
-  cycleId  String
-  status   GoalSheetStatus @default(DRAFT)
-  lockedAt DateTime?
+  id            String          @id @default(cuid())
+  userId        String
+  cycleId       String
+  status        GoalSheetStatus @default(DRAFT)
+  lockedAt      DateTime?
   reworkComment String?
 
-  user   User  @relation(fields: [userId], references: [id])
-  cycle  Cycle @relation(fields: [cycleId], references: [id])
-  goals  Goal[]
+  user            User             @relation(fields: [userId], references: [id])
+  cycle           Cycle            @relation(fields: [cycleId], references: [id])
+  goals           Goal[]
   checkinSessions CheckinSession[]
 
   createdAt DateTime @default(now())
@@ -120,23 +114,23 @@ enum GoalSheetStatus {
 }
 
 model Goal {
-  id             String  @id @default(cuid())
-  sheetId        String
-  title          String
-  description    String?
-  thrustAreaId   String
-  uomType        UomType
-  targetValue    Float?
-  targetDate     DateTime?
-  weightage      Float   // 10–100, total across sheet must = 100
-  sortOrder      Int     @default(0)
-  isShared       Boolean @default(false)
+  id               String  @id @default(cuid())
+  sheetId          String
+  title            String
+  description      String?
+  thrustAreaId     String
+  uomType          UomType
+  targetValue      Float?
+  targetDate       DateTime?
+  weightage        Float
+  sortOrder        Int     @default(0)
+  isShared         Boolean @default(false)
   sharedFromGoalId String?
 
-  sheet          GoalSheet       @relation(fields: [sheetId], references: [id], onDelete: Cascade)
-  thrustArea     ThrustArea      @relation(fields: [thrustAreaId], references: [id])
-  sharedFromGoal Goal?           @relation("SharedGoalSource", fields: [sharedFromGoalId], references: [id])
-  sharedCopies   Goal[]          @relation("SharedGoalSource")
+  sheet            GoalSheet         @relation(fields: [sheetId], references: [id], onDelete: Cascade)
+  thrustArea       ThrustArea        @relation(fields: [thrustAreaId], references: [id])
+  sharedFromGoal   Goal?             @relation("SharedGoalSource", fields: [sharedFromGoalId], references: [id])
+  sharedCopies     Goal[]            @relation("SharedGoalSource")
   quarterlyUpdates QuarterlyUpdate[]
 
   createdAt DateTime @default(now())
@@ -146,22 +140,20 @@ model Goal {
 }
 
 enum UomType {
-  NUMERIC_MIN // higher is better (e.g. revenue)
-  NUMERIC_MAX // lower is better (e.g. TAT, cost)
-  TIMELINE    // date-based completion
-  ZERO        // zero = success (e.g. safety incidents)
+  NUMERIC_MIN
+  NUMERIC_MAX
+  TIMELINE
+  ZERO
 }
 
-// ─── Quarterly Updates & Check-ins ───────────────────────────────────────────
-
 model QuarterlyUpdate {
-  id            String        @id @default(cuid())
+  id            String       @id @default(cuid())
   goalId        String
   quarter       Quarter
   actualValue   Float?
   actualDate    DateTime?
-  status        UpdateStatus  @default(NOT_STARTED)
-  computedScore Float?        // 0–1 range, stored for tracking
+  status        UpdateStatus @default(NOT_STARTED)
+  computedScore Float?
 
   goal Goal @relation(fields: [goalId], references: [id], onDelete: Cascade)
 
@@ -186,12 +178,12 @@ enum UpdateStatus {
 }
 
 model CheckinSession {
-  id          String    @id @default(cuid())
+  id          String   @id @default(cuid())
   sheetId     String
   quarter     Quarter
   managerId   String
   comment     String
-  completedAt DateTime  @default(now())
+  completedAt DateTime @default(now())
 
   sheet   GoalSheet @relation(fields: [sheetId], references: [id])
   manager User      @relation("ManagerCheckins", fields: [managerId], references: [id])
@@ -200,14 +192,12 @@ model CheckinSession {
   @@map("checkin_sessions")
 }
 
-// ─── Governance ──────────────────────────────────────────────────────────────
-
 model AuditLog {
   id          String @id @default(cuid())
-  entity      String // e.g. "Goal", "GoalSheet"
+  entity      String
   entityId    String
   changedById String
-  action      String // e.g. "UPDATE", "UNLOCK"
+  action      String
   oldData     Json?
   newData     Json?
 
@@ -219,11 +209,11 @@ model AuditLog {
 }
 
 model EscalationRule {
-  id            String          @id @default(cuid())
+  id            String            @id @default(cuid())
   cycleId       String
   triggerType   EscalationTrigger
   daysThreshold Int
-  active        Boolean         @default(true)
+  active        Boolean           @default(true)
 
   cycle Cycle @relation(fields: [cycleId], references: [id])
 
@@ -233,9 +223,9 @@ model EscalationRule {
 }
 
 enum EscalationTrigger {
-  GOAL_NOT_SUBMITTED     // employee hasn't submitted within N days of cycle open
-  GOAL_NOT_APPROVED      // manager hasn't approved within N days of submission
-  CHECKIN_NOT_COMPLETED  // check-in not done within active quarter window
+  GOAL_NOT_SUBMITTED
+  GOAL_NOT_APPROVED
+  CHECKIN_NOT_COMPLETED
 }
 
 model Notification {
@@ -263,4 +253,3 @@ enum NotificationType {
   SHARED_GOAL_RECEIVED
   SYSTEM
 }
-

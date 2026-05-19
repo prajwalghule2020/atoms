@@ -1,0 +1,120 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Users & Org ─────────────────────────────────────────────────────────────
+
+model User {
+  id           String  @id @default(cuid())
+  email        String  @unique
+  name         String
+  role         Role    @default(EMPLOYEE)
+  managerId    String?
+  departmentId String?
+  azureAdId    String? @unique
+
+  manager    User?       @relation("ManagerReports", fields: [managerId], references: [id])
+  reports    User[]      @relation("ManagerReports")
+  department Department? @relation(fields: [departmentId], references: [id])
+
+  goalSheets      GoalSheet[]
+  checkinSessions CheckinSession[] @relation("ManagerCheckins")
+  notifications   Notification[]
+  auditLogs       AuditLog[] @relation("AuditActor")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+enum Role {
+  EMPLOYEE
+  MANAGER
+  ADMIN
+}
+
+model Department {
+  id       String  @id @default(cuid())
+  name     String
+  parentId String?
+
+  parent   Department?  @relation("DeptHierarchy", fields: [parentId], references: [id])
+  children Department[] @relation("DeptHierarchy")
+  users    User[]
+
+  createdAt DateTime @default(now())
+
+  @@map("departments")
+}
+
+// ─── Cycles & Thrust Areas ───────────────────────────────────────────────────
+
+model Cycle {
+  id              String   @id @default(cuid())
+  year            Int
+  name            String
+  goalSettingOpen DateTime?
+  q1Open          DateTime?
+  q2Open          DateTime?
+  q3Open          DateTime?
+  q4Open          DateTime?
+  isActive        Boolean  @default(false)
+
+  thrustAreas     ThrustArea[]
+  goalSheets      GoalSheet[]
+  escalationRules EscalationRule[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("cycles")
+}
+
+model ThrustArea {
+  id      String @id @default(cuid())
+  name    String
+  cycleId String
+
+  cycle Cycle @relation(fields: [cycleId], references: [id])
+  goals Goal[]
+
+  createdAt DateTime @default(now())
+
+  @@map("thrust_areas")
+}
+
+// ─── Goal Sheets & Goals ─────────────────────────────────────────────────────
+
+model GoalSheet {
+  id           String          @id @default(cuid())
+  userId       String
+  cycleId      String
+  status       GoalSheetStatus @default(DRAFT)
+  lockedAt     DateTime?
+  reworkComment String?
+
+  user            User            @relation(fields: [userId], references: [id])
+  cycle           Cycle           @relation(fields: [cycleId], references: [id])
+  goals           Goal[]
+  checkinSessions CheckinSession[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, cycleId])
+  @@map("goal_sheets")
+}
+
+enum GoalSheetStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  REWORK
+}
