@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import ExcelJS from "exceljs";
 
 import { prisma } from "@repo/db";
+import type { Prisma } from "@repo/db";
 import {
   CreateCycleSchema,
   UpdateCycleSchema,
@@ -125,7 +126,18 @@ export async function GET(request: Request) {
     const cycle = await prisma.cycle.findFirst({ where: { isActive: true } });
     if (!cycle) return NextResponse.json({ cycle: null, notSubmitted: [] });
 
-    const usersWithDraft = await prisma.user.findMany({
+    const usersWithDraftSelect = {
+      id: true,
+      name: true,
+      email: true,
+      department: { select: { name: true } },
+      manager: { select: { name: true } },
+      goalSheets: { where: { cycleId: cycle.id }, select: { status: true, updatedAt: true } },
+    } as const;
+
+    type UserWithDraft = Prisma.UserGetPayload<{ select: typeof usersWithDraftSelect }>;
+
+    const usersWithDraft: UserWithDraft[] = await prisma.user.findMany({
       where: {
         role: "EMPLOYEE",
         OR: [
@@ -133,14 +145,7 @@ export async function GET(request: Request) {
           { goalSheets: { some: { cycleId: cycle.id, status: "DRAFT" } } },
         ],
       },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        department: { select: { name: true } },
-        manager: { select: { name: true } },
-        goalSheets: { where: { cycleId: cycle.id }, select: { status: true, updatedAt: true } },
-      },
+      select: usersWithDraftSelect,
       orderBy: { name: "asc" },
     });
 
@@ -152,8 +157,8 @@ export async function GET(request: Request) {
         email: user.email,
         department: user.department?.name ?? null,
         manager: user.manager?.name ?? null,
-        sheetStatus: (user.goalSheets as any[])[0]?.status ?? null,
-        lastActivity: (user.goalSheets as any[])[0]?.updatedAt ?? null,
+        sheetStatus: user.goalSheets[0]?.status ?? null,
+        lastActivity: user.goalSheets[0]?.updatedAt ?? null,
       })),
     });
   }
