@@ -1,0 +1,63 @@
+ΓÇëWARNΓÇë Unsupported engine: wanted: {"node":"20.x"} (current: {"node":"v22.16.0","pnpm":"9.12.0"})
+prisma:cli:bin Failed to initialize the command state: Error: ENOENT: no such file or directory, open 'C:\Users\hp\AppData\Roaming\prisma-nodejs\Config\commands.json' +979ms
+prisma:config:loadConfigFromFile Config file loaded in 79.05ms +932ms
+prisma:config:loadConfigFromFile No config file found in the current working directory C:\Projects\atoms\nextapp +0ms
+prisma:getSchema Reading schema from single file C:\Projects\atoms\nextapp\db\prisma\schema.prisma +81ms
+prisma:getConfig Using getConfig Wasm +2ms
+prisma:getConfig config data retrieved without errors in getConfig Wasm +12ms
+prisma:engines binaries to download schema-engine, libquery-engine +1069ms
+prisma:getSchema Reading schema from single file C:\Projects\atoms\nextapp\db\prisma\schema.prisma +3ms
+prisma:getSchema Reading schema from single file C:\Projects\atoms\nextapp\db\prisma\schema.prisma +0ms
+prisma:getConfig Using getConfig Wasm +12ms
+prisma:getConfig config data retrieved without errors in getConfig Wasm +2ms
+prisma:cli:checkpoint runCheckpointClientCheck(): Execution time for getting info: 16.930200000000013 ms +1ms
+prisma:cli:checkpoint runCheckpointClientCheck(): Execution time for "await checkpoint.check(data)": 39.70270000000005 ms +40ms
+prisma:loadEnv project root found at C:\Projects\atoms\nextapp\package.json +52ms
+prisma:getSchema prismaConfig null +0ms
+prisma:tryLoadEnv Environment variables loaded from C:\Projects\atoms\nextapp\.env +1ms
+Environment variables loaded from .env
+prisma:getSchema Reading schema from single file C:\Projects\atoms\nextapp\db\prisma\schema.prisma +2ms
+Prisma schema loaded from db\prisma\schema.prisma
+prisma:getConfig Using getConfig Wasm +1ms
+prisma:getConfig config data retrieved without errors in getConfig Wasm +1ms
+prisma:getDMMF Using getDmmf Wasm +2ms
+prisma:getDMMF dmmf data retrieved without errors in getDmmf Wasm +51ms
+prisma:client:generator requiresEngines [
+  "libqueryEngine"
+] +0ms
+prisma:generator prismaCliDir C:\Projects\atoms\nextapp\db\node_modules\prisma +4ms
+prisma:generator prismaClientDir C:\Projects\atoms\nextapp\db\node_modules\@prisma\client +0ms
+prisma:generator baseDir C:\Projects\atoms\nextapp\db\prisma +0ms
+prisma:mergeSchemas Using mergeSchemas Wasm +0ms
+prisma:loadEnv project root found at C:\Projects\atoms\node_modules\.pnpm\@prisma+client@6.19.3_prisma@6.19.3_typescript@5.9.2__typescript@5.9.2\node_modules\@prisma\client\package.json +4ms
+prisma:getSchema prismaConfig null +1ms
+prisma:getGenerators neededVersions {
+  "c2990dca591cba766e3b7ef5d9e8a84796e47ab7": {
+    "engines": [
+      "libqueryEngine"
+    ],
+    "binaryTargets": [
+      {
+        "fromEnvVar": null,
+        "value": "windows",
+        "native": true
+      }
+    ]
+  }
+} +1ms
+prisma:getGenerators {
+  "generatorBinaryPaths": {
+    "libqueryEngine": {
+      "windows": "C:\\Projects\\atoms\\nextapp\\node_modules\\.pnpm\\prisma@6.19.3_typescript@5.9.2\\node_modules\\prisma\\query_engine-windows.dll.node"
+    }
+  }
+} +60ms
+prisma:cli:nps An error occurred while handling NPS survey: Error: ENOENT: no such file or directory, open 'C:\Users\hp\AppData\Roaming\prisma-nodejs\Config\commands.json' +132ms
+prisma:cli:bin Execution time for executing "await cli.parse(commandArray)": 385.95990000000006 ms +1ms
+
+Γ£ö Generated Prisma Client (v6.19.3) to .\..\node_modules\.pnpm\@prisma+client@6.19.3_prisma@6.19.3_typescript@5.9.2__typescript@5.9.2\node_modules\@prisma\client in 127ms
+
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+
+Tip: Want to turn off tips and other hints? https://pris.ly/tip-4-nohints
+
